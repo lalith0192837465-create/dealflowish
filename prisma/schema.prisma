@@ -1,0 +1,64 @@
+// This file defines the shape of your data. Each "model" becomes a table.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite = a database that's just a file (dev.db). Zero setup.
+  // Swap to "postgresql" + a connection URL later when you deploy for real.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One Deal = one custom enterprise deal being coordinated across teams.
+model Deal {
+  id            String   @id @default(cuid())
+  customerName  String
+  salesRep      String
+
+  // The terms the salesperson is proposing
+  discountPct   Int      @default(0)
+  trialDays     Int      @default(14)
+  customFeature String?  // free text: what custom work is being promised
+
+  // One status per team that needs to sign off. This is the heart of the product:
+  // instead of sales chasing 3 people manually, each team updates their own field.
+  engStatus     String   @default("pending")   // pending | scoped | blocked
+  financeStatus String   @default("pending")   // pending | invoiced | blocked
+  legalStatus   String   @default("pending")   // pending | approved | blocked
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Once everything is approved, we auto-generate a summary doc from this record.
+  finalizedAt   DateTime?
+
+  // Links back to the call that created this deal, if it came from a call (not manual entry)
+  fromCallReviewId String?
+}
+
+// One CallReview = one Zoom call that was listened to. This is a DRAFT —
+// nothing here is real until a human confirms it. The AI's job is to read
+// the transcript and guess the deal terms; the human's job is to correct it.
+model CallReview {
+  id              String   @id @default(cuid())
+  recallBotId     String   @unique
+  zoomUrl         String
+  requestedByEmail String  // who started the "listen to this call" request
+
+  status          String   @default("processing") // processing | ready | confirmed | closed_lost | failed
+  transcript      String?  // raw text, kept for reference / re-checking the AI's work
+
+  // What the AI extracted from the transcript. All nullable because the AI
+  // might not find some of these, or the call might not have closed at all.
+  closedWon       Boolean?
+  customerName    String?
+  discountPct     Int?
+  trialDays       Int?
+  customFeature   String?  // plain-English: what Eng needs to build
+  otherNotes      String?  // anything else other stakeholders should know
+
+  createdAt       DateTime @default(now())
+  confirmedAt     DateTime?
+}
+
