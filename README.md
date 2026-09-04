@@ -1,6 +1,6 @@
 # DealFlow — demo
 
-What this proves: a sales rep submits a custom deal (discount, trial length,
+What this proves: a sales rep submits a custom deal (di scount, trial length,
 custom feature), Eng/Finance/Legal each update their own status instead of
 being chased over Slack/email, and once all three are done, a clean summary
 page is auto-generated. This is the "save time" mechanic from the validation
